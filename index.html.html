@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JECALC — Kalkulator Material Dinding & RAB Teknik Sipil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            civil: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#4f46e5',
+              600: '#4338ca',
+              700: '#3730a3',
+              900: '#1e1b4b',
+            }
+          },
+          borderRadius: {
+            'xl': '10px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .card-flat {
+      border-radius: 10px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+    /* Mode Tukang (Kompak & Kontras Tinggi) */
+    body.tukang-mode .advanced-only { display: none !important; }
+    body.tukang-mode .tukang-large { font-size: 1.15rem !important; font-weight: 700 !important; }
+    body.tukang-mode .card-flat { padding: 14px !important; }
+
+    /* Range slider styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #4338ca;
+      cursor: pointer;
+      margin-top: -6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #c7d2fe;
+      border-radius: 999px;
+    }
+    .dark input[type=range]::-webkit-slider-runnable-track {
+      background: #312e81;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen flex flex-col lg:flex-row">
+
+  <!-- Toast Notification Box (Replaces alert) -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="no-print w-full lg:w-64 bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 z-20">
+    <div>
+      <!-- Brand Header -->
+      <div class="p-4 lg:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-civil-600 flex items-center justify-center text-white font-bold shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M4 18h16M5 14h14M6 10h12M9 6h6M4 18V6a2 2 0 012-2h12a2 2 0 012 2v12" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-tight leading-none">JECALC <span class="text-[10px] font-mono bg-civil-50 dark:bg-civil-900/60 text-civil-600 dark:text-civil-200 px-1.5 py-0.5 rounded ml-1">SNI</span></h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Civil Wall & RAB Engine</p>
+          </div>
+        </div>
+        <!-- Mobile Theme Toggle -->
+        <button onclick="toggleDarkMode()" class="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" title="Ganti Tema">
+          <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-3 flex lg:flex-col gap-1.5 overflow-x-auto">
+        <button onclick="switchTab('calc')" id="nav-calc" class="nav-btn active flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap bg-civil-50 dark:bg-civil-900/40 text-civil-700 dark:text-civil-200">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Kalkulator & 2D
+        </button>
+        <button onclick="switchTab('compare')" id="nav-compare" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Bandingkan Dinding
+        </button>
+        <button onclick="switchTab('rab')" id="nav-rab" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          RAB & Daftar Belanja
+        </button>
+        <button onclick="switchTab('guide')" id="nav-guide" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Panduan & Contoh
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Controls: Mode Tukang & Theme -->
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 hidden lg:flex flex-col gap-3">
+      <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800/80 p-2.5 rounded-xl">
+        <div>
+          <p class="text-xs font-semibold">Mode Tukang</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Tampilan kompak lapangan</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="tukang-toggle" onchange="toggleTukangMode()" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-civil-600"></div>
+        </label>
+      </div>
+
+      <button onclick="toggleDarkMode()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span class="dark:hidden">Mode Gelap</span>
+        <span class="hidden dark:inline">Mode Terang</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+
+    <!-- Top Project Bar -->
+    <header class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div>
+        <div class="flex items-center gap-2">
+          <input id="project-name" type="text" value="Proyek Rumah Tinggal 2 Lantai - Dinding Utama" class="font-semibold text-lg bg-transparent border-b border-transparent hover:border-slate-300 focus:border-civil-600 focus:outline-none px-1 -ml-1 transition" />
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Referensi SNI 6897:2008 & Permen PUPR AHSP Bidang Cipta Karya</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="saveProjectLocal()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:border-civil-500 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-civil-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          Simpan Proyek
+        </button>
+        <button onclick="resetToExample()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:border-civil-500 transition">
+          Reset Contoh
+        </button>
+        <button onclick="switchTab('rab'); setTimeout(()=>window.print(), 200);" class="px-3 py-1.5 rounded-xl bg-civil-600 hover:bg-civil-700 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Cetak / PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: KALKULATOR & VISUALISASI 2D                                  -->
+    <!-- =================================================================== -->
+    <section id="tab-calc" class="tab-section space-y-6">
+
+      <!-- AI SMART PARSER BAR -->
+      <div class="advanced-only card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-civil-100 dark:bg-civil-900/60 text-civil-600 dark:text-civil-300">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+            </span>
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-civil-600 dark:text-civil-300">JECALC AI Input Bahasa Natural</h2>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="fillPrompt('Dinding depan 8 x 3 meter, 1 pintu dan 2 jendela, pakai hebel')" class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-civil-50 dark:hover:bg-civil-900/40 text-slate-600 dark:text-slate-300 transition">Contoh: Hebel 8x3m</button>
+            <button onclick="fillPrompt('Dinding pagar 12 x 2.5 meter, tanpa pintu, pakai batako, waste 8%')" class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-civil-50 dark:hover:bg-civil-900/40 text-slate-600 dark:text-slate-300 transition">Contoh: Pagar Batako</button>
+            <button onclick="fillPrompt('Sekat ruang kantor 6 x 3.2 meter, 1 pintu, pakai gypsum')" class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-civil-50 dark:hover:bg-civil-900/40 text-slate-600 dark:text-slate-300 transition">Contoh: Partisi Gypsum</button>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="ai-prompt-input" type="text" placeholder="Ketik deskripsi dinding... Misal: Dinding depan 8 x 3 meter, 1 pintu dan 2 jendela, pakai hebel" class="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-civil-600" onkeydown="if(event.key==='Enter') parseAIPrompt()" />
+          <button onclick="parseAIPrompt()" class="px-4 py-2 rounded-xl bg-civil-600 hover:bg-civil-700 text-white text-sm font-medium transition shrink-0 flex items-center justify-center gap-1.5">
+            <span>Terapkan AI</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <p id="ai-feedback" class="text-xs text-slate-500 dark:text-slate-400 mt-2 hidden"></p>
+      </div>
+
+      <!-- MAIN 2-COLUMN GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: INPUT PARAMETERS (5 cols) -->
+        <div class="lg:col-span-5 space-y-5">
+
+          <!-- 1. Jenis Dinding Chips -->
+          <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-3">
+              <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Jenis Material Dinding</label>
+              <span id="wall-spec-badge" class="text-[11px] font-mono bg-civil-50 dark:bg-civil-900/50 text-civil-700 dark:text-civil-200 px-2 py-0.5 rounded-md">8.33 pcs/m²</span>
+            </div>
+            <div id="wall-type-chips" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- 2. Dimensi Dinding -->
+          <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Dimensi Dinding</label>
+              <div class="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs">
+                <button type="button" onclick="setUnit('m')" id="unit-m" class="px-2.5 py-1 rounded-md font-medium bg-white dark:bg-slate-700 shadow-sm text-civil-600 dark:text-white">Meter (m)</button>
+                <button type="button" onclick="setUnit('cm')" id="unit-cm" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400">Cm (cm)</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Panjang (<span class="unit-label">m</span>)</label>
+                <input type="number" id="input-length" value="8" step="0.1" min="0.1" oninput="recalculate()" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-sm focus:outline-none focus:border-civil-600" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Tinggi (<span class="unit-label">m</span>)</label>
+                <input type="number" id="input-height" value="3" step="0.1" min="0.1" oninput="recalculate()" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-sm focus:outline-none focus:border-civil-600" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Tebal (cm)</label>
+                <input type="number" id="input-thickness" value="10" step="0.5" min="1" oninput="recalculate()" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-sm focus:outline-none focus:border-civil-600" />
+              </div>
+            </div>
+
+            <!-- What-if Waste Slider -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Slider "Bagaimana Jika" — Faktor Waste / Susut</label>
+                <span id="waste-val-display" class="text-xs font-mono font-bold text-civil-600 dark:text-civil-300 bg-civil-50 dark:bg-civil-900/50 px-2 py-0.5 rounded">5%</span>
+              </div>
+              <input type="range" id="input-waste" min="0" max="15" step="1" value="5" oninput="recalculate()" class="w-full" />
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                <span>0% (Ideal)</span>
+                <span>5% (Standar)</span>
+                <span>10% (Potongan Banyak)</span>
+                <span>15%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Pengurangan Bukaan (Pintu & Jendela) -->
+          <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">3. Pengurangan Bukaan</label>
+              <div class="flex gap-1.5">
+                <button type="button" onclick="addOpening('Pintu', 0.9, 2.1, 1)" class="text-xs px-2.5 py-1 rounded-lg bg-civil-50 dark:bg-civil-900/50 text-civil-700 dark:text-civil-200 font-medium hover:bg-civil-100 transition">+ Pintu</button>
+                <button type="button" onclick="addOpening('Jendela', 1.2, 1.5, 1)" class="text-xs px-2.5 py-1 rounded-lg bg-civil-50 dark:bg-civil-900/50 text-civil-700 dark:text-civil-200 font-medium hover:bg-civil-100 transition">+ Jendela</button>
+              </div>
+            </div>
+            <div id="openings-list" class="space-y-2">
+              <!-- Dynamic openings rows -->
+            </div>
+          </div>
+
+          <!-- 4. Pekerjaan Lanjutan -->
+          <div class="advanced-only card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">4. Pekerjaan Lanjutan (AHSP)</label>
+            <div class="space-y-2.5 text-sm">
+              <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer">
+                <div>
+                  <span class="font-medium">Plesteran & Acian (2 Sisi)</span>
+                  <p class="text-xs text-slate-500">Tebal plester 15mm + acian semen</p>
+                </div>
+                <input type="checkbox" id="opt-plaster" checked onchange="recalculate()" class="w-4 h-4 accent-civil-600 rounded" />
+              </label>
+
+              <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer">
+                <div>
+                  <span class="font-medium">Pengecatan Dinding (2 Sisi)</span>
+                  <p class="text-xs text-slate-500">1x Plamir/Sealer + 2x Cat Tembok</p>
+                </div>
+                <input type="checkbox" id="opt-paint" checked onchange="recalculate()" class="w-4 h-4 accent-civil-600 rounded" />
+              </label>
+
+              <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer">
+                <div>
+                  <span class="font-medium">Kolom Praktis & Ring Balk</span>
+                  <p class="text-xs text-slate-500">Beton bertulang 11x11 cm tiap ±3m & top</p>
+                </div>
+                <input type="checkbox" id="opt-column" checked onchange="recalculate()" class="w-4 h-4 accent-civil-600 rounded" />
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: 2D VISUALIZATION & REALTIME RESULTS (7 cols) -->
+        <div class="lg:col-span-7 space-y-5">
+
+          <!-- 2D Interactive Wall Canvas -->
+          <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="text-sm font-semibold">Pratinjau Elevasi Dinding 2D</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Proporsi skala otomatis dengan potongan bukaan pintu & jendela</p>
+              </div>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-civil-500/20 border border-civil-600 inline-block"></span> Bidang Dinding</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-500/20 border border-amber-500 inline-block"></span> Bukaan</span>
+              </div>
+            </div>
+            <div class="w-full h-64 sm:h-72 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-center overflow-hidden relative">
+              <canvas id="wall-canvas" class="w-full h-full block"></canvas>
+            </div>
+          </div>
+
+          <!-- Top 4 KPI Summary Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5">
+              <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Luas Kotor</p>
+              <p id="kpi-gross" class="tukang-large text-lg font-bold font-mono mt-1">24.00 m²</p>
+            </div>
+            <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5">
+              <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Luas Bukaan</p>
+              <p id="kpi-opening" class="tukang-large text-lg font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">-5.49 m²</p>
+            </div>
+            <div class="card-flat bg-white dark:bg-slate-900 border border-civil-200 dark:border-civil-800/80 bg-civil-50/40 dark:bg-civil-950/30 p-3.5">
+              <p class="text-[11px] font-semibold text-civil-700 dark:text-civil-300">Luas Bersih</p>
+              <p id="kpi-net" class="tukang-large text-lg font-bold font-mono text-civil-700 dark:text-civil-200 mt-1">18.51 m²</p>
+            </div>
+            <div class="card-flat bg-civil-600 text-white p-3.5 shadow-sm">
+              <p class="text-[11px] font-medium text-civil-100">Estimasi Total RAB</p>
+              <p id="kpi-cost" class="tukang-large text-base sm:text-lg font-bold font-mono mt-1">Rp 0</p>
+            </div>
+          </div>
+
+          <!-- Real-Time Material Breakdown -->
+          <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold">Kebutuhan Material Utama (Termasuk Waste)</h3>
+              <span class="text-xs text-slate-500 font-mono">Koefisien SNI</span>
+            </div>
+            <div id="material-cards-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Cost Composition Chart & AI Recommendation -->
+          <div class="advanced-only grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Visual Cost Bar Breakdown -->
+            <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <h3 class="text-sm font-semibold mb-1">Komposisi Biaya Pekerjaan</h3>
+                <p class="text-xs text-slate-500 mb-4">Proporsi pasangan dinding, plester/acian, cat & struktur</p>
+                <div id="cost-chart-bars" class="space-y-3">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between text-xs text-slate-500">
+                <span>Material vs Upah Kerja</span>
+                <span id="mat-vs-labor-ratio" class="font-mono font-semibold text-slate-700 dark:text-slate-300">72% : 28%</span>
+              </div>
+            </div>
+
+            <!-- AI Engineering Insight -->
+            <div class="card-flat bg-civil-50/60 dark:bg-civil-950/40 border border-civil-200/80 dark:border-civil-800/60 p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-2 text-civil-700 dark:text-civil-300 font-semibold text-sm mb-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                  Analisis & Transparansi Rumus
+                </div>
+                <p id="ai-insight-text" class="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                  Memuat analisis...
+                </p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-civil-200/60 dark:border-civil-800/60">
+                <p class="text-[11px] font-mono text-civil-700 dark:text-civil-300" id="formula-preview">
+                  N = Luas Bersih × Koefisien × (1 + Waste)
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: PERBANDINGAN JENIS DINDING                                   -->
+    <!-- =================================================================== -->
+    <section id="tab-compare" class="tab-section hidden space-y-6">
+      <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-base font-bold">Simulasi Perbandingan 6 Jenis Dinding</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Menggunakan dimensi dinding bersih Anda saat ini: <span id="compare-net-area" class="font-mono font-semibold text-civil-600">18.51 m²</span> (Waste <span id="compare-waste">5%</span>)</p>
+          </div>
+          <span class="text-xs bg-civil-50 dark:bg-civil-900/50 text-civil-700 dark:text-civil-200 px-3 py-1.5 rounded-xl font-medium">Klik kartu untuk memilih material</span>
+        </div>
+
+        <div id="comparison-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: RAB & DAFTAR BELANJA (EDITABLE DATABASE)                     -->
+    <!-- =================================================================== -->
+    <section id="tab-rab" class="tab-section hidden space-y-6">
+      <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-base font-bold">Rencana Anggaran Biaya (RAB) & Daftar Belanja</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Harga satuan dapat diedit langsung pada kolom tabel untuk menyesuaikan harga toko setempat.</p>
+          </div>
+          <div class="no-print flex flex-wrap gap-2">
+            <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Ekspor Excel / CSV
+            </button>
+            <button onclick="copyShoppingList()" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition">
+              Salin Daftar Belanja WA
+            </button>
+          </div>
+        </div>
+
+        <!-- Editable RAB Table -->
+        <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">
+                <th class="py-3 px-4">No</th>
+                <th class="py-3 px-4">Uraian Material / Upah</th>
+                <th class="py-3 px-4">Kategori</th>
+                <th class="py-3 px-4 text-right">Volume</th>
+                <th class="py-3 px-4">Satuan</th>
+                <th class="py-3 px-4 text-right">Harga Satuan (Rp)</th>
+                <th class="py-3 px-4 text-right">Jumlah Harga (Rp)</th>
+              </tr>
+            </thead>
+            <tbody id="rab-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Overhead & PPN Footer -->
+        <div class="mt-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 w-full md:w-80 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pengaturan Pajak & Jasa</p>
+            <div class="flex items-center justify-between text-xs">
+              <label for="input-overhead">Overhead & Profit Kontraktor (%)</label>
+              <input type="number" id="input-overhead" value="10" min="0" max="30" onchange="recalculate()" class="w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-right font-mono" />
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <label for="input-ppn">PPN (%)</label>
+              <input type="number" id="input-ppn" value="11" min="0" max="20" onchange="recalculate()" class="w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-right font-mono" />
+            </div>
+          </div>
+
+          <div class="w-full md:w-96 space-y-2 text-sm bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Subtotal Biaya Langsung</span>
+              <span id="rab-subtotal" class="font-mono font-medium">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Overhead & Profit (<span id="rab-overhead-lbl">10</span>%)</span>
+              <span id="rab-overhead-val" class="font-mono font-medium">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>PPN (<span id="rab-ppn-lbl">11</span>%)</span>
+              <span id="rab-ppn-val" class="font-mono font-medium">Rp 0</span>
+            </div>
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-base font-bold text-civil-700 dark:text-civil-300">
+              <span>TOTAL AKHIR RAB</span>
+              <span id="rab-grand-total" class="font-mono text-lg">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: PANDUAN & CONTOH PERHITUNGAN LENGKAP                         -->
+    <!-- =================================================================== -->
+    <section id="tab-guide" class="tab-section hidden space-y-6">
+      <div class="card-flat bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-6">
+        <div class="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span class="text-xs font-mono uppercase bg-civil-50 dark:bg-civil-900/50 text-civil-700 dark:text-civil-300 px-2.5 py-1 rounded-md">Studi Kasus Teknik Sipil</span>
+            <h2 class="text-lg font-bold mt-2">Contoh Perhitungan Manual vs JECALC (SNI / AHSP)</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Panduan langkah demi langkah agar mahasiswa, kontraktor, dan tukang mudah memvalidasi hasil aplikasi.</p>
+          </div>
+          <button onclick="loadCaseStudyToCalc()" class="px-4 py-2 rounded-xl bg-civil-600 hover:bg-civil-700 text-white text-xs font-medium transition shrink-0">
+            Muat Studi Kasus Ini ke Kalkulator
+          </button>
+        </div>
+
+        <!-- Step by Step Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h3 class="font-bold text-civil-700 dark:text-civil-300">Langkah 1: Data Diketahui (Input)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+              <li><strong>Jenis Dinding:</strong> Bata Ringan Hebel (AAC) ukuran 60 × 20 × 10 cm</li>
+              <li><strong>Dimensi Dinding:</strong> Panjang = <code class="font-mono">8,0 m</code>, Tinggi = <code class="font-mono">3,0 m</code></li>
+              <li><strong>Bukaan 1 (Pintu):</strong> 1 unit ukuran <code class="font-mono">0,90 m × 2,10 m</code></li>
+              <li><strong>Bukaan 2 (Jendela):</strong> 2 unit ukuran <code class="font-mono">1,20 m × 1,50 m</code></li>
+              <li><strong>Faktor Waste (Susut Potong):</strong> <code class="font-mono">5%</code> (0,05)</li>
+            </ul>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h3 class="font-bold text-civil-700 dark:text-civil-300">Langkah 2: Menghitung Luas Bersih Dinding</h3>
+            <div class="font-mono text-xs bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+              <p>Luas Kotor   = 8,0 m × 3,0 m = <strong>24,00 m²</strong></p>
+              <p>Luas Pintu   = 1 × (0,9 × 2,1) = 1,89 m²</p>
+              <p>Luas Jendela = 2 × (1,2 × 1,5) = 3,60 m²</p>
+              <p>Total Bukaan = 1,89 + 3,60   = <strong>5,49 m²</strong></p>
+              <p class="text-civil-600 dark:text-civil-400 pt-1 border-t border-slate-200 dark:border-slate-800">Luas Bersih  = 24,00 - 5,49  = <strong>18,51 m²</strong></p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h3 class="font-bold text-civil-700 dark:text-civil-300">Langkah 3: Kebutuhan Bata Ringan & Mortar</h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300">Dalam 1 m² dinding dibutuhkan <code class="font-mono">1 / (0,60 × 0,20) = 8,33 buah</code> hebel.</p>
+            <div class="font-mono text-xs bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+              <p>Kebutuhan Hebel = 18,51 m² × 8,33 pcs/m² × (1 + 0,05)</p>
+              <p>                = 161,89 pcs → dibulatkan <strong>162 pcs</strong></p>
+              <p class="pt-1">Perekat Thinbed = 18,51 m² × 0,11 sak/m² = <strong>2,04 sak (40kg)</strong></p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h3 class="font-bold text-civil-700 dark:text-civil-300">Langkah 4: Plesteran, Acian & Kolom Praktis</h3>
+            <div class="font-mono text-xs bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+              <p>Luas Plester 2 Sisi = 2 × 18,51 m² = <strong>37,02 m²</strong></p>
+              <p>Semen Plester+Acian = 37,02 × (0,156 + 0,065) ≈ <strong>8,2 sak</strong></p>
+              <p>Pasir Pasang        = 37,02 × 0,024 m³/m² ≈ <strong>0,89 m³</strong></p>
+              <p>Kolom Praktis & Ring= Tinggi kolom + panjang ring balk</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reference Table of SNI Coefficients -->
+        <div>
+          <h3 class="text-sm font-bold mb-3">Tabel Koefisien Dasar Material per 1 m² Dinding (Referensi SNI / AHSP)</h3>
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <th class="p-3">Jenis Dinding</th>
+                  <th class="p-3">Dimensi Standar</th>
+                  <th class="p-3">Koefisien Unit / m²</th>
+                  <th class="p-3">Perekat / Spesi per m²</th>
+                  <th class="p-3">Keterangan Teknis</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td class="p-3 font-semibold">Bata Merah (1/2 Bata)</td>
+                  <td class="p-3 font-mono">20 × 10 × 5 cm</td>
+                  <td class="p-3 font-mono">70 buah/m²</td>
+                  <td class="p-3">0.23 sak semen + 0.043 m³ pasir</td>
+                  <td class="p-3">SNI 6897:2008 Spesi 1PC:4PP</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-semibold">Hebel / Bata Ringan AAC</td>
+                  <td class="p-3 font-mono">60 × 20 × 10 cm</td>
+                  <td class="p-3 font-mono">8.33 buah/m²</td>
+                  <td class="p-3">0.11 sak mortar thinbed (40kg)</td>
+                  <td class="p-3">Pemasangan cepat, beban struktur ringan</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-semibold">Batako Press</td>
+                  <td class="p-3 font-mono">40 × 20 × 10 cm</td>
+                  <td class="p-3 font-mono">12.5 buah/m²</td>
+                  <td class="p-3">0.21 sak semen + 0.038 m³ pasir</td>
+                  <td class="p-3">Ekonomis untuk dinding pagar & gudang</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-semibold">Conblock / Hollow Block</td>
+                  <td class="p-3 font-mono">40 × 20 × 15 cm</td>
+                  <td class="p-3 font-mono">12.5 buah/m²</td>
+                  <td class="p-3">0.24 sak semen + 0.042 m³ pasir</td>
+                  <td class="p-3">Tahan benturan & isolasi suara baik</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-semibold">Partisi Gypsum 2 Sisi</td>
+                  <td class="p-3 font-mono">120 × 240 × 0.9 cm</td>
+                  <td class="p-3 font-mono">0.72 lembar/m²</td>
+                  <td class="p-3">Rangka Hollow 4x4 + Sekrup + Compound</td>
+                  <td class="p-3">Khusus interior kering, tanpa plester</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-semibold">GRC Board / Precast</td>
+                  <td class="p-3 font-mono">120 × 240 × 0.8 cm</td>
+                  <td class="p-3 font-mono">0.72 lembar/m²</td>
+                  <td class="p-3">Rangka Hollow Galvanis + Sealant</td>
+                  <td class="p-3">Tahan air & cuaca untuk fasad/eksterior</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. DATABASE KOEFISIEN SNI/AHSP & HARGA SATUAN (EDITABLE)
+    // =========================================================================
+    const WALL_TYPES = {
+      hebel: {
+        id: 'hebel',
+        name: 'Hebel (AAC)',
+        sub: '60×20×10 cm',
+        unitName: 'buah',
+        coeffPerM2: 8.33,
+        defaultThick: 10,
+        mortarType: 'thinbed', // thinbed mortar
+        thinbedSakPerM2: 0.11, // 40kg sak
+        needsPlaster: true,
+        laborCoefPerM2: 0.18, // OH Tukang + Pekerja
+        desc: 'Ringan, presisi tinggi, hemat spesi, ideal untuk bangunan bertingkat.'
+      },
+      bata_merah: {
+        id: 'bata_merah',
+        name: 'Bata Merah',
+        sub: '1/2 Bata (SNI)',
+        unitName: 'buah',
+        coeffPerM2: 70,
+        defaultThick: 15,
+        mortarType: 'conventional',
+        cementSakPerM2: 0.23, // 50kg sak (11.5 kg)
+        sandM3PerM2: 0.043,
+        needsPlaster: true,
+        laborCoefPerM2: 0.30,
+        desc: 'Kuat, mudah didapat, tahan panas, membutuhkan plesteran lebih tebal.'
+      },
+      batako: {
+        id: 'batako',
+        name: 'Batako Press',
+        sub: '40×20×10 cm',
+        unitName: 'buah',
+        coeffPerM2: 12.5,
+        defaultThick: 10,
+        mortarType: 'conventional',
+        cementSakPerM2: 0.21,
+        sandM3PerM2: 0.038,
+        needsPlaster: true,
+        laborCoefPerM2: 0.22,
+        desc: 'Biaya material hemat dan pemasangan cepat untuk dinding luas.'
+      },
+      conblock: {
+        id: 'conblock',
+        name: 'Conblock',
+        sub: '40×20×15 cm',
+        unitName: 'buah',
+        coeffPerM2: 12.5,
+        defaultThick: 15,
+        mortarType: 'conventional',
+        cementSakPerM2: 0.24,
+        sandM3PerM2: 0.042,
+        needsPlaster: true,
+        laborCoefPerM2: 0.24,
+        desc: 'Berongga untuk insulasi suara dan jalur instalasi pipa/kabel.'
+      },
+      gypsum: {
+        id: 'gypsum',
+        name: 'Gypsum Board',
+        sub: '2 Sisi + Rangka',
+        unitName: 'lembar',
+        coeffPerM2: 0.72, // 2 sisi papan 1.2x2.4m (2.88 m2)
+        defaultThick: 9,
+        mortarType: 'drywall',
+        hollowBatangPerM2: 0.85, // batang 4m
+        needsPlaster: false,
+        laborCoefPerM2: 0.16,
+        desc: 'Partisi kering interior sangat cepat tanpa perlu plester & acian.'
+      },
+      grc: {
+        id: 'grc',
+        name: 'GRC / Precast',
+        sub: '2 Sisi + Galvanis',
+        unitName: 'lembar',
+        coeffPerM2: 0.72,
+        defaultThick: 10,
+        mortarType: 'drywall',
+        hollowBatangPerM2: 0.90,
+        needsPlaster: false,
+        laborCoefPerM2: 0.18,
+        desc: 'Tahan air dan cuaca ekstrem, cocok untuk dinding luar & fasad.'
+      }
+    };
+
+    // Database Harga Satuan (Dapat diedit di Tab RAB)
+    let PRICE_DB = {
+      hebel: 9500,          // per buah
+      bata_merah: 1100,     // per buah
+      batako: 3800,         // per buah
+      conblock: 5200,       // per buah
+      gypsum: 78000,        // per lembar 120x240
+      grc: 115000,          // per lembar 120x240
+      semen_50kg: 68000,    // per sak 50kg
+      thinbed_40kg: 95000,  // per sak 40kg
+      pasir_pasang: 285000, // per m3
+      hollow_4x4: 32000,    // per batang 4m
+      compound_sekrup: 45000, // per paket m2/set
+      cat_tembok: 145000,   // per galon 5kg (cakupan ~25 m2)
+      kolom_praktis: 115000,// per m' (beton + besi 4D10 + begel)
+      upah_tukang: 165000   // per hari (OH)
+    };
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
+    let state = {
+      wallType: 'hebel',
+      unit: 'm',
+      length: 8,     // stored in meters internally
+      height: 3,     // stored in meters internally
+      thickness: 10, // in cm
+      waste: 5,      // in %
+      openings: [
+        { id: 1, type: 'Pintu', w: 0.9, h: 2.1, qty: 1 },
+        { id: 2, type: 'Jendela', w: 1.2, h: 1.5, qty: 2 }
+      ],
+      optPlaster: true,
+      optPaint: true,
+      optColumn: true,
+      overhead: 10,
+      ppn: 11
+    };
+
+    let currentRABItems = [];
+
+    // =========================================================================
+    // 3. INITIALIZATION & UI HELPERS
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+      renderWallChips();
+      renderOpenings();
+      recalculate();
+      window.addEventListener('resize', drawWall2D);
+    });
+
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'bg-slate-900 dark:bg-civil-600 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg transform transition-all duration-300 translate-y-2 opacity-0';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 2800);
+    }
+
+    function formatRupiah(num) {
+      return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-civil-50', 'dark:bg-civil-900/40', 'text-civil-700', 'dark:text-civil-200');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400');
+      });
+      const activeBtn = document.getElementById('nav-' + tabName);
+      activeBtn.classList.add('bg-civil-50', 'dark:bg-civil-900/40', 'text-civil-700', 'dark:text-civil-200');
+      activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+      if (tabName === 'calc') setTimeout(drawWall2D, 30);
+      if (tabName === 'compare') renderComparisonTab();
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      drawWall2D();
+    }
+
+    function toggleTukangMode() {
+      const checked = document.getElementById('tukang-toggle').checked;
+      document.body.classList.toggle('tukang-mode', checked);
+      showToast(checked ? 'Mode Tukang Aktif: Tampilan ringkas & besar' : 'Mode Teknik Sipil Lengkap Aktif');
+    }
+
+    // =========================================================================
+    // 4. RENDER CHIPS, UNITS & OPENINGS
+    // =========================================================================
+    function renderWallChips() {
+      const container = document.getElementById('wall-type-chips');
+      container.innerHTML = '';
+      Object.values(WALL_TYPES).forEach(wt => {
+        const isSelected = state.wallType === wt.id;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectWallType(wt.id);
+        btn.className = `p-2.5 rounded-xl border text-left transition ${
+          isSelected
+            ? 'border-civil-600 bg-civil-50/80 dark:bg-civil-900/50 text-civil-800 dark:text-civil-100 ring-1 ring-civil-600'
+            : 'border-slate-200 dark:border-slate-800 hover:border-civil-400 bg-slate-50/50 dark:bg-slate-950/50'
+        }`;
+        btn.innerHTML = `
+          <div class="text-xs font-semibold truncate">${wt.name}</div>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">${wt.sub}</div>
+        `;
+        container.appendChild(btn);
+      });
+      const spec = WALL_TYPES[state.wallType];
+      document.getElementById('wall-spec-badge').textContent = `${spec.coeffPerM2} ${spec.unitName}/m²`;
+    }
+
+    function selectWallType(id) {
+      state.wallType = id;
+      state.thickness = WALL_TYPES[id].defaultThick;
+      document.getElementById('input-thickness').value = state.thickness;
+      renderWallChips();
+      recalculate();
+    }
+
+    function setUnit(newUnit) {
+      if (state.unit === newUnit) return;
+      const factor = newUnit === 'cm' ? 100 : 0.01;
+      state.unit = newUnit;
+
+      document.getElementById('input-length').value = +(state.length * (newUnit === 'cm' ? 100 : 1)).toFixed(2);
+      document.getElementById('input-height').value = +(state.height * (newUnit === 'cm' ? 100 : 1)).toFixed(2);
+
+      document.querySelectorAll('.unit-label').forEach(el => el.textContent = newUnit);
+      document.getElementById('unit-m').className = newUnit === 'm'
+        ? 'px-2.5 py-1 rounded-md font-medium bg-white dark:bg-slate-700 shadow-sm text-civil-600 dark:text-white'
+        : 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400';
+      document.getElementById('unit-cm').className = newUnit === 'cm'
+        ? 'px-2.5 py-1 rounded-md font-medium bg-white dark:bg-slate-700 shadow-sm text-civil-600 dark:text-white'
+        : 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400';
+
+      renderOpenings();
+      recalculate();
+    }
+
+    function addOpening(type, wMeters, hMeters, qty) {
+      state.openings.push({
+        id: Date.now() + Math.random(),
+        type,
+        w: wMeters,
+        h: hMeters,
+        qty
+      });
+      renderOpenings();
+      recalculate();
+    }
+
+    function removeOpening(id) {
+      state.openings = state.openings.filter(o => o.id !== id);
+      renderOpenings();
+      recalculate();
+    }
+
+    function updateOpening(id, field, val) {
+      const item = state.openings.find(o => o.id === id);
+      if (!item) return;
+      const num = parseFloat(val) || 0;
+      if (field === 'qty') {
+        item.qty = Math.max(1, Math.round(num));
+      } else {
+        item[field] = state.unit === 'cm' ? num / 100 : num;
+      }
+      recalculate();
+    }
+
+    function renderOpenings() {
+      const container = document.getElementById('openings-list');
+      if (state.openings.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic py-2 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">Tidak ada bukaan (Dinding masif penuh)</p>`;
+        return;
+      }
+      const mult = state.unit === 'cm' ? 100 : 1;
+      container.innerHTML = state.openings.map(op => `
+        <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs">
+          <span class="px-2 py-1 rounded-lg font-medium ${op.type === 'Pintu' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300'} w-16 text-center shrink-0">${op.type}</span>
+          <div class="flex-1 grid grid-cols-3 gap-1.5">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Lebar (${state.unit})</span>
+              <input type="number" step="0.1" value="${+(op.w * mult).toFixed(2)}" oninput="updateOpening(${op.id}, 'w', this.value)" class="w-full px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono" />
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Tinggi (${state.unit})</span>
+              <input type="number" step="0.1" value="${+(op.h * mult).toFixed(2)}" oninput="updateOpening(${op.id}, 'h', this.value)" class="w-full px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono" />
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Jumlah</span>
+              <input type="number" min="1" value="${op.qty}" oninput="updateOpening(${op.id}, 'qty', this.value)" class="w-full px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono" />
+            </div>
+          </div>
+          <button type="button" onclick="removeOpening(${op.id})" class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="Hapus">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 5. CORE CIVIL ENGINEERING CALCULATION ENGINE
+    // =========================================================================
+    function computeWallMetrics(wallTypeId, lengthM, heightM, openings, wastePct, optPlaster, optPaint, optColumn) {
+      const spec = WALL_TYPES[wallTypeId];
+      const grossArea = Math.max(0, lengthM * heightM);
+      const openingArea = openings.reduce((sum, op) => sum + (op.w * op.h * op.qty), 0);
+      const netArea = Math.max(0, grossArea - openingArea);
+      const wasteFactor = 1 + (wastePct / 100);
+
+      // 1. Unit Bata / Lembar
+      const rawUnits = netArea * spec.coeffPerM2 * wasteFactor;
+      const totalUnits = Math.ceil(rawUnits);
+
+      // 2. Perekat / Spesi Pasangan
+      let mortarItems = [];
+      let wallMaterialCost = totalUnits * PRICE_DB[wallTypeId];
+
+      if (spec.mortarType === 'thinbed') {
+        const thinbedSak = +(netArea * spec.thinbedSakPerM2 * wasteFactor).toFixed(2);
+        mortarItems.push({ name: 'Mortar Perekat Thinbed (40kg)', qty: thinbedSak, unit: 'sak', price: PRICE_DB.thinbed_40kg, cat: 'Pasangan' });
+        wallMaterialCost += thinbedSak * PRICE_DB.thinbed_40kg;
+      } else if (spec.mortarType === 'conventional') {
+        const cementSak = +(netArea * spec.cementSakPerM2 * wasteFactor).toFixed(2);
+        const sandM3 = +(netArea * spec.sandM3PerM2 * wasteFactor).toFixed(2);
+        mortarItems.push({ name: 'Semen Portland Pasangan (50kg)', qty: cementSak, unit: 'sak', price: PRICE_DB.semen_50kg, cat: 'Pasangan' });
+        mortarItems.push({ name: 'Pasir Pasang', qty: sandM3, unit: 'm³', price: PRICE_DB.pasir_pasang, cat: 'Pasangan' });
+        wallMaterialCost += (cementSak * PRICE_DB.semen_50kg) + (sandM3 * PRICE_DB.pasir_pasang);
+      } else if (spec.mortarType === 'drywall') {
+        const hollowBatang = Math.ceil(netArea * spec.hollowBatangPerM2 * wasteFactor);
+        const accM2 = +(netArea * 1.05).toFixed(2);
+        mortarItems.push({ name: 'Rangka Hollow Galvanis 4×4 (4m)', qty: hollowBatang, unit: 'batang', price: PRICE_DB.hollow_4x4, cat: 'Pasangan' });
+        mortarItems.push({ name: 'Sekrup, Textile Tape & Compound', qty: accM2, unit: 'm²', price: PRICE_DB.compound_sekrup, cat: 'Pasangan' });
+        wallMaterialCost += (hollowBatang * PRICE_DB.hollow_4x4) + (accM2 * PRICE_DB.compound_sekrup);
+      }
+
+      const wallLaborOH = +(netArea * spec.laborCoefPerM2).toFixed(2);
+      const wallLaborCost = wallLaborOH * PRICE_DB.upah_tukang;
+
+      // 3. Plesteran & Acian (2 Sisi, hanya jika dinding pasangan bata/hebel/batako)
+      let plasterItems = [];
+      let plasterTotalCost = 0;
+      if (optPlaster && spec.needsPlaster && netArea > 0) {
+        const area2Sides = netArea * 2;
+        // SNI: Plester 15mm (0.156 sak/m2) + Acian (0.065 sak/m2) = 0.221 sak/m2
+        const plasterCementSak = +(area2Sides * 0.221 * wasteFactor).toFixed(2);
+        const plasterSandM3 = +(area2Sides * 0.024 * wasteFactor).toFixed(2);
+        const plasterLaborOH = +(area2Sides * 0.15).toFixed(2);
+
+        plasterItems.push({ name: 'Semen Plesteran & Acian 2 Sisi (50kg)', qty: plasterCementSak, unit: 'sak', price: PRICE_DB.semen_50kg, cat: 'Finishing' });
+        plasterItems.push({ name: 'Pasir Plester Halus', qty: plasterSandM3, unit: 'm³', price: PRICE_DB.pasir_pasang, cat: 'Finishing' });
+        plasterItems.push({ name: 'Upah Plester & Acian', qty: plasterLaborOH, unit: 'OH', price: PRICE_DB.upah_tukang, cat: 'Upah' });
+
+        plasterTotalCost = (plasterCementSak * PRICE_DB.semen_50kg) + (plasterSandM3 * PRICE_DB.pasir_pasang) + (plasterLaborOH * PRICE_DB.upah_tukang);
+      }
+
+      // 4. Pengecatan Dinding (2 Sisi)
+      let paintItems = [];
+      let paintTotalCost = 0;
+      if (optPaint && netArea > 0) {
+        const area2Sides = netArea * 2;
+        // 1 galon 5kg cukup untuk ~25 m2 (2 lapis)
+        const paintGalon = +(area2Sides / 25 * wasteFactor).toFixed(2);
+        const paintLaborOH = +(area2Sides * 0.06).toFixed(2);
+
+        paintItems.push({ name: 'Cat Tembok Interior/Eksterior (5kg)', qty: paintGalon, unit: 'galon', price: PRICE_DB.cat_tembok, cat: 'Finishing' });
+        paintItems.push({ name: 'Upah Pengecatan 2 Sisi', qty: paintLaborOH, unit: 'OH', price: PRICE_DB.upah_tukang, cat: 'Upah' });
+
+        paintTotalCost = (paintGalon * PRICE_DB.cat_tembok) + (paintLaborOH * PRICE_DB.upah_tukang);
+      }
+
+      // 5. Kolom Praktis & Ring Balk (Tiap jarak 3m vertikal + ring balk top horizontal)
+      let columnItems = [];
+      let columnTotalCost = 0;
+      if (optColumn && netArea > 0) {
+        const numVerticalCols = Math.max(2, Math.ceil(lengthM / 3) + 1);
+        const totalLinearMeters = +((numVerticalCols * heightM) + lengthM).toFixed(2);
+        columnItems.push({ name: `Beton Kolom Praktis (${numVerticalCols} titik) & Ring Balk`, qty: totalLinearMeters, unit: 'm\'', price: PRICE_DB.kolom_praktis, cat: 'Struktur' });
+        columnTotalCost = totalLinearMeters * PRICE_DB.kolom_praktis;
+      }
+
+      // Gabungkan seluruh item RAB
+      const rabList = [
+        { name: `${spec.name} (${spec.sub})`, qty: totalUnits, unit: spec.unitName, price: PRICE_DB[wallTypeId], cat: 'Pasangan', key: wallTypeId },
+        ...mortarItems,
+        { name: `Upah Pasang Dinding ${spec.name}`, qty: wallLaborOH, unit: 'OH', price: PRICE_DB.upah_tukang, cat: 'Upah', key: 'upah_tukang' },
+        ...plasterItems,
+        ...paintItems,
+        ...columnItems
+      ];
+
+      const directSubtotal = rabList.reduce((acc, item) => acc + (item.qty * item.price), 0);
+
+      return {
+        spec,
+        grossArea,
+        openingArea,
+        netArea,
+        totalUnits,
+        rawUnits,
+        rabList,
+        directSubtotal,
+        breakdown: {
+          pasangan: wallMaterialCost + wallLaborCost,
+          finishing: plasterTotalCost + paintTotalCost,
+          struktur: columnTotalCost
+        }
+      };
+    }
+
+    function recalculate() {
+      // Read inputs
+      const rawL = parseFloat(document.getElementById('input-length').value) || 0;
+      const rawH = parseFloat(document.getElementById('input-height').value) || 0;
+      state.length = state.unit === 'cm' ? rawL / 100 : rawL;
+      state.height = state.unit === 'cm' ? rawH / 100 : rawH;
+      state.thickness = parseFloat(document.getElementById('input-thickness').value) || 10;
+      state.waste = parseInt(document.getElementById('input-waste').value) || 0;
+      state.optPlaster = document.getElementById('opt-plaster').checked;
+      state.optPaint = document.getElementById('opt-paint').checked;
+      state.optColumn = document.getElementById('opt-column').checked;
+      state.overhead = parseFloat(document.getElementById('input-overhead').value) || 0;
+      state.ppn = parseFloat(document.getElementById('input-ppn').value) || 0;
+
+      document.getElementById('waste-val-display').textContent = state.waste + '%';
+
+      const res = computeWallMetrics(
+        state.wallType,
+        state.length,
+        state.height,
+        state.openings,
+        state.waste,
+        state.optPlaster,
+        state.optPaint,
+        state.optColumn
+      );
+
+      // Update Overhead & PPN totals
+      const overheadVal = res.directSubtotal * (state.overhead / 100);
+      const ppnVal = (res.directSubtotal + overheadVal) * (state.ppn / 100);
+      const grandTotal = res.directSubtotal + overheadVal + ppnVal;
+
+      // Update KPI Cards
+      document.getElementById('kpi-gross').textContent = res.grossArea.toFixed(2) + ' m²';
+      document.getElementById('kpi-opening').textContent = '-' + res.openingArea.toFixed(2) + ' m²';
+      document.getElementById('kpi-net').textContent = res.netArea.toFixed(2) + ' m²';
+      document.getElementById('kpi-cost').textContent = formatRupiah(grandTotal);
+
+      // Update Material Cards
+      renderMaterialCards(res);
+
+      // Update Cost Composition Chart
+      renderCostChart(res);
+
+      // Update AI Engineering Explanation
+      renderAIExplanation(res, grandTotal);
+
+      // Update RAB Table
+      currentRABItems = res.rabList;
+      renderRABTable(res.rabList, res.directSubtotal, overheadVal, ppnVal, grandTotal);
+
+      // Update 2D Canvas
+      drawWall2D();
+    }
+
+    function renderMaterialCards(res) {
+      const container = document.getElementById('material-cards-grid');
+      const materialOnly = res.rabList.filter(i => i.cat !== 'Upah');
+      container.innerHTML = materialOnly.map(item => `
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" title="${item.name}">${item.name}</p>
+          <p class="tukang-large text-base font-bold font-mono text-slate-900 dark:text-white mt-1">
+            ${item.qty} <span class="text-xs font-normal text-slate-500">${item.unit}</span>
+          </p>
+        </div>
+      `).join('');
+    }
+
+    function renderCostChart(res) {
+      const total = Math.max(1, res.directSubtotal);
+      const pPasangan = Math.round((res.breakdown.pasangan / total) * 100);
+      const pFinishing = Math.round((res.breakdown.finishing / total) * 100);
+      const pStruktur = Math.max(0, 100 - pPasangan - pFinishing);
+
+      const bars = [
+        { label: 'Pasangan Dinding', pct: pPasangan, val: res.breakdown.pasangan, color: 'bg-civil-600' },
+        { label: 'Plester, Acian & Cat', pct: pFinishing, val: res.breakdown.finishing, color: 'bg-sky-500' },
+        { label: 'Kolom Praktis & Ring', pct: pStruktur, val: res.breakdown.struktur, color: 'bg-amber-500' }
+      ];
+
+      document.getElementById('cost-chart-bars').innerHTML = bars.map(b => `
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium">${b.label}</span>
+            <span class="font-mono text-slate-500">${formatRupiah(b.val)} (${b.pct}%)</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div class="${b.color} h-full rounded-full transition-all duration-300" style="width: ${b.pct}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Material vs Labor ratio
+      const laborCost = res.rabList.filter(i => i.cat === 'Upah').reduce((s, i) => s + i.qty * i.price, 0);
+      const laborPct = Math.round((laborCost / total) * 100);
+      document.getElementById('mat-vs-labor-ratio').textContent = `${100 - laborPct}% : ${laborPct}%`;
+    }
+
+    function renderAIExplanation(res, grandTotal) {
+      const costPerM2 = res.netArea > 0 ? grandTotal / res.netArea : 0;
+      const spec = res.spec;
+      document.getElementById('ai-insight-text').innerHTML = `
+        Untuk luas bersih <strong>${res.netArea.toFixed(2)} m²</strong> menggunakan <strong>${spec.name}</strong> (koefisien ${spec.coeffPerM2} ${spec.unitName}/m² + waste ${state.waste}%), dibutuhkan <strong>${res.totalUnits} ${spec.unitName}</strong>.
+        Estimasi biaya total adalah <strong>${formatRupiah(costPerM2)}/m²</strong>. ${spec.desc}
+      `;
+      document.getElementById('formula-preview').textContent =
+        `N = ${res.netArea.toFixed(2)} m² × ${spec.coeffPerM2} × (1 + ${state.waste/100}) = ${res.rawUnits.toFixed(1)} → ${res.totalUnits} ${spec.unitName}`;
+    }
+
+    // =========================================================================
+    // 6. 2D WALL VISUALIZATION CANVAS
+    // =========================================================================
+    function drawWall2D() {
+      const canvas = document.getElementById('wall-canvas');
+      if (!canvas) return;
+      const parent = canvas.parentElement;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = parent.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const isDark = document.documentElement.classList.contains('dark');
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      const W = Math.max(0.5, state.length);
+      const H = Math.max(0.5, state.height);
+
+      const padX = 56;
+      const padY = 44;
+      const availW = rect.width - padX * 2;
+      const availH = rect.height - padY * 2;
+
+      const scale = Math.min(availW / W, availH / H);
+      const drawW = W * scale;
+      const drawH = H * scale;
+      const startX = (rect.width - drawW) / 2;
+      const startY = (rect.height - drawH) / 2;
+
+      // Ground line
+      ctx.strokeStyle = isDark ? '#334155' : '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX - 20, startY + drawH);
+      ctx.lineTo(startX + drawW + 20, startY + drawH);
+      ctx.stroke();
+
+      // Main Wall Fill
+      ctx.fillStyle = isDark ? 'rgba(79, 70, 229, 0.16)' : 'rgba(79, 70, 229, 0.08)';
+      ctx.strokeStyle = '#4f46e5';
+      ctx.lineWidth = 2;
+      ctx.fillRect(startX, startY, drawW, drawH);
+      ctx.strokeRect(startX, startY, drawW, drawH);
+
+      // Material Hatching Pattern (Bricks / Panels)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(startX, startY, drawW, drawH);
+      ctx.clip();
+      ctx.strokeStyle = isDark ? 'rgba(129, 140, 248, 0.18)' : 'rgba(79, 70, 229, 0.15)';
+      ctx.lineWidth = 1;
+
+      const rowH = state.wallType === 'bata_merah' ? 8 : (state.wallType === 'gypsum' || state.wallType === 'grc' ? 40 : 14);
+      const colW = state.wallType === 'gypsum' || state.wallType === 'grc' ? 28 : rowH * 2.5;
+
+      for (let y = startY; y < startY + drawH; y += rowH) {
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(startX + drawW, y);
+        ctx.stroke();
+
+        const rowIdx = Math.floor((y - startY) / rowH);
+        const offset = (rowIdx % 2 === 0 || state.wallType === 'gypsum' || state.wallType === 'grc') ? 0 : colW / 2;
+        for (let x = startX + offset; x < startX + drawW; x += colW) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + rowH);
+          ctx.stroke();
+        }
+      }
+
+      // Kolom Praktis & Ring Balk indicator
+      if (state.optColumn) {
+        ctx.fillStyle = isDark ? 'rgba(148, 163, 184, 0.25)' : 'rgba(100, 116, 139, 0.2)';
+        const colPx = Math.max(4, 0.12 * scale);
+        // Ring balk top
+        ctx.fillRect(startX, startY, drawW, colPx);
+        // Vertical columns every 3m
+        const numCols = Math.max(2, Math.ceil(W / 3) + 1);
+        for (let i = 0; i < numCols; i++) {
+          const cx = startX + (i / (numCols - 1)) * (drawW - colPx);
+          ctx.fillRect(cx, startY, colPx, drawH);
+        }
+      }
+      ctx.restore();
+
+      // Draw Openings (Doors & Windows) automatically spaced along wall
+      let flatOpenings = [];
+      state.openings.forEach(op => {
+        for (let q = 0; q < op.qty; q++) flatOpenings.push(op);
+      });
+
+      if (flatOpenings.length > 0) {
+        const totalOpWidth = flatOpenings.reduce((s, o) => s + o.w, 0);
+        const gap = Math.max(0.2, (W - totalOpWidth) / (flatOpenings.length + 1));
+        let curX = startX + gap * scale;
+
+        flatOpenings.forEach(op => {
+          const ow = Math.min(op.w * scale, drawW * 0.8);
+          const oh = Math.min(op.h * scale, drawH * 0.95);
+          // Doors sit at bottom floor, windows sit at sill height (0.8m from floor)
+          const sillOffset = op.type === 'Pintu' ? 0 : Math.min(0.8 * scale, drawH - oh);
+          const oy = startY + drawH - oh - sillOffset;
+
+          // Clear wall inside opening
+          ctx.fillStyle = isDark ? '#020617' : '#f8fafc';
+          ctx.fillRect(curX, oy, ow, oh);
+
+          // Opening border
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.8;
+          ctx.fillRect(curX, oy, ow, oh);
+          ctx.strokeRect(curX, oy, ow, oh);
+
+          // Label inside opening
+          ctx.fillStyle = isDark ? '#fbbf24' : '#b45309';
+          ctx.font = '600 10px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          if (ow > 24 && oh > 20) {
+            ctx.fillText(`${op.type}`, curX + ow / 2, oy + oh / 2 - 2);
+            ctx.font = '400 9px JetBrains Mono, monospace';
+            ctx.fillText(`${op.w}×${op.h}m`, curX + ow / 2, oy + oh / 2 + 10);
+          }
+
+          curX += ow + gap * scale;
+        });
+      }
+
+      // Dimension Lines (Width Bottom & Height Left)
+      ctx.strokeStyle = isDark ? '#64748b' : '#475569';
+      ctx.fillStyle = isDark ? '#cbd5e1' : '#334155';
+      ctx.lineWidth = 1;
+      ctx.font = '600 11px JetBrains Mono, monospace';
+
+      // Bottom width dimension
+      const dimY = startY + drawH + 18;
+      ctx.beginPath();
+      ctx.moveTo(startX, dimY);
+      ctx.lineTo(startX + drawW, dimY);
+      ctx.moveTo(startX, dimY - 4); ctx.lineTo(startX, dimY + 4);
+      ctx.moveTo(startX + drawW, dimY - 4); ctx.lineTo(startX + drawW, dimY + 4);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillText(`P = ${state.length.toFixed(2)} m`, startX + drawW / 2, dimY + 14);
+
+      // Left height dimension
+      const dimX = startX - 16;
+      ctx.beginPath();
+      ctx.moveTo(dimX, startY);
+      ctx.lineTo(dimX, startY + drawH);
+      ctx.moveTo(dimX - 4, startY); ctx.lineTo(dimX + 4, startY);
+      ctx.moveTo(dimX - 4, startY + drawH); ctx.lineTo(dimX + 4, startY + drawH);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(dimX - 10, startY + drawH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(`T = ${state.height.toFixed(2)} m`, 0, 0);
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 7. COMPARISON TAB RENDERER
+    // =========================================================================
+    function renderComparisonTab() {
+      const baseRes = computeWallMetrics(state.wallType, state.length, state.height, state.openings, state.waste, state.optPlaster, state.optPaint, state.optColumn);
+      document.getElementById('compare-net-area').textContent = baseRes.netArea.toFixed(2) + ' m²';
+      document.getElementById('compare-waste').textContent = state.waste + '%';
+
+      const results = Object.keys(WALL_TYPES).map(id => {
+        const r = computeWallMetrics(id, state.length, state.height, state.openings, state.waste, state.optPlaster, state.optPaint, state.optColumn);
+        const grand = r.directSubtotal * (1 + state.overhead / 100) * (1 + state.ppn / 100);
+        return { id, r, grand };
+      });
+
+      const minCost = Math.min(...results.map(x => x.grand));
+      const container = document.getElementById('comparison-grid');
+
+      container.innerHTML = results.map(({ id, r, grand }) => {
+        const isCheapest = grand === minCost;
+        const isCurrent = id === state.wallType;
+        return `
+          <div onclick="selectWallType('${id}'); switchTab('calc'); showToast('Beralih ke ${r.spec.name}');"
+               class="cursor-pointer p-4 rounded-xl border transition flex flex-col justify-between ${
+                 isCurrent
+                   ? 'border-civil-600 bg-civil-50/50 dark:bg-civil-900/30 ring-1 ring-civil-600'
+                   : 'border-slate-200 dark:border-slate-800 hover:border-civil-400 bg-slate-50/40 dark:bg-slate-950/40'
+               }">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="font-bold text-sm">${r.spec.name}</span>
+                ${isCheapest ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">Paling Hemat</span>' : ''}
+                ${isCurrent && !isCheapest ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-civil-100 text-civil-800 dark:bg-civil-900 dark:text-civil-200">Aktif</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">${r.spec.desc}</p>
+            </div>
+            <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-500">Kebutuhan Utama:</span>
+                <span class="font-mono font-semibold">${r.totalUnits} ${r.spec.unitName}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-500">Biaya per m²:</span>
+                <span class="font-mono">${formatRupiah(r.netArea > 0 ? grand / r.netArea : 0)}</span>
+              </div>
+              <div class="flex justify-between items-center pt-1">
+                <span class="text-xs font-medium">Total RAB:</span>
+                <span class="font-mono font-bold text-sm text-civil-700 dark:text-civil-300">${formatRupiah(grand)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 8. RAB TABLE, EDITABLE PRICES & CSV EXPORT
+    // =========================================================================
+    function renderRABTable(items, subtotal, overheadVal, ppnVal, grandTotal) {
+      const tbody = document.getElementById('rab-table-body');
+      tbody.innerHTML = items.map((item, idx) => {
+        const rowTotal = item.qty * item.price;
+        // Map item name to PRICE_DB key for editing
+        const priceKey = detectPriceKey(item);
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30">
+            <td class="py-2.5 px-4 font-mono text-xs text-slate-400">${idx + 1}</td>
+            <td class="py-2.5 px-4 font-medium text-xs sm:text-sm">${item.name}</td>
+            <td class="py-2.5 px-4">
+              <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${item.cat}</span>
+            </td>
+            <td class="py-2.5 px-4 text-right font-mono text-xs sm:text-sm">${item.qty}</td>
+            <td class="py-2.5 px-4 text-xs text-slate-500">${item.unit}</td>
+            <td class="py-2.5 px-4 text-right">
+              <input type="number" value="${item.price}" step="500" onchange="updateUnitPrice('${priceKey}', this.value)"
+                class="w-28 px-2 py-1 text-right font-mono text-xs rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-civil-600 focus:outline-none" />
+            </td>
+            <td class="py-2.5 px-4 text-right font-mono font-semibold text-xs sm:text-sm">${formatRupiah(rowTotal)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('rab-subtotal').textContent = formatRupiah(subtotal);
+      document.getElementById('rab-overhead-lbl').textContent = state.overhead;
+      document.getElementById('rab-overhead-val').textContent = formatRupiah(overheadVal);
+      document.getElementById('rab-ppn-lbl').textContent = state.ppn;
+      document.getElementById('rab-ppn-val').textContent = formatRupiah(ppnVal);
+      document.getElementById('rab-grand-total').textContent = formatRupiah(grandTotal);
+    }
+
+    function detectPriceKey(item) {
+      if (item.key) return item.key;
+      const n = item.name.toLowerCase();
+      if (n.includes('thinbed')) return 'thinbed_40kg';
+      if (n.includes('semen')) return 'semen_50kg';
+      if (n.includes('pasir')) return 'pasir_pasang';
+      if (n.includes('hollow')) return 'hollow_4x4';
+      if (n.includes('sekrup')) return 'compound_sekrup';
+      if (n.includes('cat')) return 'cat_tembok';
+      if (n.includes('kolom')) return 'kolom_praktis';
+      if (n.includes('upah')) return 'upah_tukang';
+      return state.wallType;
+    }
+
+    function updateUnitPrice(key, val) {
+      PRICE_DB[key] = Math.max(0, parseFloat(val) || 0);
+      recalculate();
+      showToast('Harga satuan diperbarui & RAB dihitung ulang');
+    }
+
+    function exportCSV() {
+      const proj = document.getElementById('project-name').value || 'Proyek_JECALC';
+      let csv = `PROYEK,${proj}\n`;
+      csv += `JENIS DINDING,${WALL_TYPES[state.wallType].name}\n`;
+      csv += `DIMENSI (P x T),${state.length}m x ${state.height}m\n\n`;
+      csv += `No,Uraian Material / Upah,Kategori,Volume,Satuan,Harga Satuan (Rp),Jumlah Harga (Rp)\n`;
+
+      currentRABItems.forEach((item, i) => {
+        csv += `${i + 1},"${item.name}",${item.cat},${item.qty},${item.unit},${item.price},${Math.round(item.qty * item.price)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `RAB_JECALC_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('File RAB (.CSV) berhasil diunduh!');
+    }
+
+    function copyShoppingList() {
+      const proj = document.getElementById('project-name').value;
+      const mats = currentRABItems.filter(i => i.cat !== 'Upah');
+      let text = `*DAFTAR BELANJA MATERIAL - JECALC*\nProyek: ${proj}\nJenis: ${WALL_TYPES[state.wallType].name}\n------------------------\n`;
+      mats.forEach((m, idx) => {
+        text += `${idx + 1}. ${m.name}: *${m.qty} ${m.unit}*\n`;
+      });
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Daftar belanja disalin ke clipboard (siap tempel ke WhatsApp)!');
+    }
+
+    // =========================================================================
+    // 9. AI NATURAL LANGUAGE PARSER (INDONESIAN CIVIL PARSER)
+    // =========================================================================
+    function fillPrompt(txt) {
+      document.getElementById('ai-prompt-input').value = txt;
+      parseAIPrompt();
+    }
+
+    function parseAIPrompt() {
+      const raw = document.getElementById('ai-prompt-input').value.trim();
+      if (!raw) return;
+      const lower = raw.toLowerCase();
+
+      // 1. Parse Dimensions e.g. "8 x 3", "8.5x3.2", "panjang 10 tinggi 4"
+      let foundL = null, foundH = null;
+      const dimMatch = lower.match(/(\d+(?:[.,]\d+)?)\s*(?:m|meter|cm)?\s*[x×*]\s*(\d+(?:[.,]\d+)?)/);
+      if (dimMatch) {
+        foundL = parseFloat(dimMatch[1].replace(',', '.'));
+        foundH = parseFloat(dimMatch[2].replace(',', '.'));
+        if (lower.includes('cm') && foundL > 30) { foundL /= 100; foundH /= 100; }
+      }
+
+      // 2. Parse Wall Type
+      let detectedType = null;
+      if (lower.includes('hebel') || lower.includes('bata ringan') || lower.includes('aac')) detectedType = 'hebel';
+      else if (lower.includes('bata merah') || lower.includes('bata')) detectedType = 'bata_merah';
+      else if (lower.includes('batako')) detectedType = 'batako';
+      else if (lower.includes('conblock') || lower.includes('konblok')) detectedType = 'conblock';
+      else if (lower.includes('gypsum') || lower.includes('gipsum')) detectedType = 'gypsum';
+      else if (lower.includes('grc') || lower.includes('precast')) detectedType = 'grc';
+
+      // 3. Parse Openings (Pintu & Jendela)
+      const doorMatch = lower.match(/(\d+)\s*pintu/);
+      const winMatch = lower.match(/(\d+)\s*jendela/);
+      const noOpening = lower.includes('tanpa pintu') || lower.includes('tanpa bukaan') || lower.includes('polos');
+
+      // 4. Parse Waste %
+      const wasteMatch = lower.match(/waste\s*(\d+)\s*%/);
+
+      // Apply parsed parameters
+      if (detectedType) {
+        state.wallType = detectedType;
+        state.thickness = WALL_TYPES[detectedType].defaultThick;
+        document.getElementById('input-thickness').value = state.thickness;
+        renderWallChips();
+      }
+
+      if (foundL && foundH) {
+        setUnit('m');
+        state.length = foundL;
+        state.height = foundH;
+        document.getElementById('input-length').value = foundL;
+        document.getElementById('input-height').value = foundH;
+      }
+
+      if (noOpening) {
+        state.openings = [];
+      } else if (doorMatch || winMatch) {
+        state.openings = [];
+        if (doorMatch && parseInt(doorMatch[1]) > 0) {
+          state.openings.push({ id: 101, type: 'Pintu', w: 0.9, h: 2.1, qty: parseInt(doorMatch[1]) });
+        }
+        if (winMatch && parseInt(winMatch[1]) > 0) {
+          state.openings.push({ id: 102, type: 'Jendela', w: 1.2, h: 1.5, qty: parseInt(winMatch[1]) });
+        }
+      }
+
+      if (wasteMatch) {
+        state.waste = Math.min(15, Math.max(0, parseInt(wasteMatch[1])));
+        document.getElementById('input-waste').value = state.waste;
+      }
+
+      renderOpenings();
+      recalculate();
+
+      const fb = document.getElementById('ai-feedback');
+      fb.classList.remove('hidden');
+      fb.innerHTML = `<span class="text-civil-600 dark:text-civil-300 font-semibold">✓ AI Berhasil Memproses:</span> Dimensi ${state.length}m × ${state.height}m | Material: ${WALL_TYPES[state.wallType].name} | Bukaan: ${state.openings.length} jenis | Waste: ${state.waste}%.`;
+      showToast('Parameter dinding otomatis diperbarui oleh AI!');
+    }
+
+    // =========================================================================
+    // 10. LOCAL STORAGE PERSISTENCE & CASE STUDY LOADER
+    // =========================================================================
+    function saveProjectLocal() {
+      const payload = {
+        projectName: document.getElementById('project-name').value,
+        state,
+        PRICE_DB
+      };
+      localStorage.setItem('jecalc_project_v1', JSON.stringify(payload));
+      showToast('Proyek tersimpan di penyimpanan lokal browser!');
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem('jecalc_project_v1');
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) document.getElementById('project-name').value = parsed.projectName;
+        if (parsed.state) state = { ...state, ...parsed.state };
+        if (parsed.PRICE_DB) PRICE_DB = { ...PRICE_DB, ...parsed.PRICE_DB };
+
+        document.getElementById('input-length').value = state.length;
+        document.getElementById('input-height').value = state.height;
+        document.getElementById('input-thickness').value = state.thickness;
+        document.getElementById('input-waste').value = state.waste;
+        document.getElementById('opt-plaster').checked = state.optPlaster;
+        document.getElementById('opt-paint').checked = state.optPaint;
+        document.getElementById('opt-column').checked = state.optColumn;
+      } catch (e) {
+        console.warn('Gagal memuat penyimpanan lokal', e);
+      }
+    }
+
+    function resetToExample() {
+      localStorage.removeItem('jecalc_project_v1');
+      loadCaseStudyToCalc();
+      showToast('Data dikembalikan ke contoh standar SNI');
+    }
+
+    function loadCaseStudyToCalc() {
+      setUnit('m');
+      state.wallType = 'hebel';
+      state.length = 8;
+      state.height = 3;
+      state.thickness = 10;
+      state.waste = 5;
+      state.openings = [
+        { id: 1, type: 'Pintu', w: 0.9, h: 2.1, qty: 1 },
+        { id: 2, type: 'Jendela', w: 1.2, h: 1.5, qty: 2 }
+      ];
+      state.optPlaster = true;
+      state.optPaint = true;
+      state.optColumn = true;
+
+      document.getElementById('input-length').value = 8;
+      document.getElementById('input-height').value = 3;
+      document.getElementById('input-thickness').value = 10;
+      document.getElementById('input-waste').value = 5;
+      document.getElementById('opt-plaster').checked = true;
+      document.getElementById('opt-paint').checked = true;
+      document.getElementById('opt-column').checked = true;
+
+      renderWallChips();
+      renderOpenings();
+      recalculate();
+      switchTab('calc');
+      showToast('Studi kasus (Hebel 8×3m) dimuat ke kalkulator!');
+    }
+  </script>
+</body>
+</html>
